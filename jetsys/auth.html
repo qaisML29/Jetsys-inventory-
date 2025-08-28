@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JETSYS Defense - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles/main.css" rel="stylesheet">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="text-center mb-4">
+                <img src="assets/images/logo.png" alt="JETSYS Defense" height="50">
+                <h3 class="mt-2">JETSYS Defense Inventory</h3>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginSection">
+                <h4 class="text-center mb-4">Login to Your Account</h4>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="loginEmail" required 
+                               placeholder="your.email@jetsys.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required 
+                               placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="#" id="showRegister">Create New Account</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerSection" style="display: none;">
+                <h4 class="text-center mb-4">Create New Account</h4>
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="registerEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="registerEmail" required 
+                               placeholder="your.email@jetsys.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="registerPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="registerPassword" required 
+                               placeholder="Create a strong password" minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required 
+                               placeholder="Confirm your password">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Create Account</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="#" id="showLogin">Back to Login</a>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="authLoading" class="text-center mt-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2" id="loadingText">Processing...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="authError" class="alert alert-danger mt-3" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from '../scripts/supabase.js'
+
+        // Form switching
+        document.getElementById('showRegister').addEventListener('click', (e) => {
+            e.preventDefault()
+            document.getElementById('loginSection').style.display = 'none'
+            document.getElementById('registerSection').style.display = 'block'
+        })
+
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault()
+            document.getElementById('registerSection').style.display = 'none'
+            document.getElementById('loginSection').style.display = 'block'
+        })
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('loginEmail').value
+            const password = document.getElementById('loginPassword').value
+            
+            showLoading('Logging in...')
+            hideError()
+
+            const { user, error } = await supabase.auth.signIn({ email, password })
+            
+            hideLoading()
+            if (error) {
+                showError(error.message)
+            } else {
+                window.location.href = 'index.html'
+            }
+        })
+
+        // Register form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('registerEmail').value
+            const password = document.getElementById('registerPassword').value
+            const confirmPassword = document.getElementById('confirmPassword').value
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match')
+                return
+            }
+
+            showLoading('Creating account...')
+            hideError()
+
+            const { user, error } = await supabase.auth.signUp({ email, password })
+            
+            hideLoading()
+            if (error) {
+                showError(error.message)
+            } else {
+                showLoading('Account created! Redirecting to login...')
+                setTimeout(() => {
+                    document.getElementById('registerSection').style.display = 'none'
+                    document.getElementById('loginSection').style.display = 'block'
+                    hideLoading()
+                    alert('Account created successfully. Please login.')
+                }, 2000)
+            }
+        })
+
+        function showLoading(text) {
+            document.getElementById('authLoading').style.display = 'block'
+            document.getElementById('loadingText').textContent = text
+        }
+
+        function hideLoading() {
+            document.getElementById('authLoading').style.display = 'none'
+        }
+
+        function showError(message) {
+            document.getElementById('authError').style.display = 'block'
+            document.getElementById('authError').textContent = message
+        }
+
+        function hideError() {
+            document.getElementById('authError').style.display = 'none'
+        }
+    </script>
+</body>
+</html>
